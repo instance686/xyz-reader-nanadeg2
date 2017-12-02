@@ -15,8 +15,9 @@ import java.util.List;
 public interface MyDoa {
     @Insert
     public void insertData(List<Data> data);
-    @Delete
-    public void deleteData(List<Data> data);
+    @Query("Delete from data")
+    public void deleteData();
     @Query("Select * FROM data")
     public List<Data> loadData();
+
 }

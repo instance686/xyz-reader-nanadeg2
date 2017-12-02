@@ -1,11 +1,9 @@
 package com.example.xyzreader.data;
 
 
-import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.ListView;
 
 import com.example.xyzreader.remote.RemoteEndpointUtil;
 
@@ -17,14 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class DownloadTask extends AsyncTask<Void,Void,String>{
+public class DownloadTask extends AsyncTask<Void,Void,List<Data>>{
     AppDatabase appDatabase;
     private static final String TAG ="field" ;
     JSONArray itemJson;
     List<Data> list=new ArrayList<>();
-    Context c;
-    public DownloadTask(Context context){
+    Context c,gh;
+    int choice;
+
+    private  OnLoadFinished loadFinished;
+
+    public DownloadTask(Context context,Context gh){
      c=context;
+     loadFinished= (OnLoadFinished) gh;
     }
 
     @Override
@@ -34,11 +37,40 @@ public class DownloadTask extends AsyncTask<Void,Void,String>{
     }
 
     @Override
-    protected String doInBackground(Void... voids) {
+    protected List<Data> doInBackground(Void... voids) {
 
-        itemJson = RemoteEndpointUtil.fetchJsonArray();
-        return itemJson.toString();
-    }
+
+            appDatabase.myDoa().deleteData();
+            itemJson = RemoteEndpointUtil.fetchJsonArray();
+
+            for(int i=0;i<itemJson.length();i++){
+                JSONObject jo= null;
+                try {
+                    jo = itemJson.getJSONObject(i);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Data d=new Data();
+                try {
+                    d.id=jo.getString("id" );
+                    d.author=jo.getString("author" );
+                    d.title=jo.getString("title" );
+                    d.body=jo.getString("body" );
+                    d.thumb=jo.getString("thumb" );
+                    d.photo=jo.getString("photo");
+                    d.aspect_ratio=jo.getString("aspect_ratio" );
+                    d.published_date=jo.getString("published_date");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                list.add(d);
+            }
+        appDatabase.myDoa().insertData(list);
+      //  List<Data> getData = appDatabase.myDoa().loadData();
+        return list;
+
+            }
 
     @Override
     protected void onProgressUpdate(Void... values) {
@@ -46,37 +78,10 @@ public class DownloadTask extends AsyncTask<Void,Void,String>{
     }
 
     @Override
-    protected void onPostExecute(String s) {
-        super.onPostExecute(s);
-        JSONArray ja = null;
-        try {
-            ja = new JSONArray(s);
-            for(int i=0;i<ja.length();i++){
-                JSONObject jo=ja.getJSONObject(i);
-                Data d=new Data();
-                d.id=jo.getString("id" );
-                d.author=jo.getString("author" );
-                d.title=jo.getString("title" );
-                d.body=jo.getString("body" );
-                d.thumb=jo.getString("thumb" );
-                d.photo=jo.getString("photo");
-                d.aspect_ratio=jo.getString("aspect_ratio" );
-                d.published_date=jo.getString("published_date");
-                list.add(d);
-                Log.v("data",d.toString());
+    protected void onPostExecute(List<Data> da) {
+        super.onPostExecute(da);
 
-            }
+        loadFinished.loadFinished(da);
 
-            appDatabase.myDoa().insertData(list);
-
-            List<Data> getData=appDatabase.myDoa().loadData();
-            for(Data dd:getData){
-              Log.v("id",dd.getTitle());
-              Log.v("photo",dd.getBody());
-              Log.v("body",dd.getBody());
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 }
