@@ -17,13 +17,14 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <android.support.v7.widget.RecyclerView
+            <com.example.xyzreader.ui.GridRecyclerView
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="16dp"
                 android:layout_marginRight="16dp"
-                android:layout_marginTop="16dp"/>
+                android:layout_marginTop="16dp"
+                android:layoutAnimation="@anim/grid_layout_animation_from_bottom"   />
         </LinearLayout>
         <!-- -->
 

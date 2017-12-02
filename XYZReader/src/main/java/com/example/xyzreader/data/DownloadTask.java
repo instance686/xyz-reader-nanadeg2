@@ -41,32 +41,37 @@ public class DownloadTask extends AsyncTask<Void,Void,List<Data>>{
 
 
             appDatabase.myDoa().deleteData();
-            itemJson = RemoteEndpointUtil.fetchJsonArray();
+            try {
+                itemJson = RemoteEndpointUtil.fetchJsonArray();
 
-            for(int i=0;i<itemJson.length();i++){
-                JSONObject jo= null;
-                try {
-                    jo = itemJson.getJSONObject(i);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                Data d=new Data();
-                try {
-                    d.id=jo.getString("id" );
-                    d.author=jo.getString("author" );
-                    d.title=jo.getString("title" );
-                    d.body=jo.getString("body" );
-                    d.thumb=jo.getString("thumb" );
-                    d.photo=jo.getString("photo");
-                    d.aspect_ratio=jo.getString("aspect_ratio" );
-                    d.published_date=jo.getString("published_date");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                for (int i = 0; i < itemJson.length(); i++) {
+                    JSONObject jo = null;
+                    try {
+                        jo = itemJson.getJSONObject(i);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    Data d = new Data();
+                    try {
+                        d.id = jo.getString("id");
+                        d.author = jo.getString("author");
+                        d.title = jo.getString("title");
+                        d.body = jo.getString("body");
+                        d.thumb = jo.getString("thumb");
+                        d.photo = jo.getString("photo");
+                        d.aspect_ratio = jo.getString("aspect_ratio");
+                        d.published_date = jo.getString("published_date");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
 
-                list.add(d);
+                    list.add(d);
+                }
+                appDatabase.myDoa().insertData(list);
             }
-        appDatabase.myDoa().insertData(list);
+            catch (NullPointerException ex){
+                return null;
+            }
       //  List<Data> getData = appDatabase.myDoa().loadData();
         return list;
 

@@ -1,15 +1,12 @@
     package com.example.xyzreader.ui;
-
-    import android.app.LoaderManager;
-    import android.content.BroadcastReceiver;
-    import android.content.Context;
-    import android.content.Intent;
-    import android.content.IntentFilter;
-    import android.content.Loader;
     import android.database.Cursor;
+    import android.net.ConnectivityManager;
+    import android.net.NetworkInfo;
     import android.os.Bundle;
     import android.support.design.widget.AppBarLayout;
     import android.support.design.widget.CollapsingToolbarLayout;
+    import android.support.design.widget.CoordinatorLayout;
+    import android.support.design.widget.Snackbar;
     import android.support.v4.widget.SwipeRefreshLayout;
     import android.support.v7.app.AppCompatActivity;
     import android.support.v7.widget.GridLayoutManager;
@@ -19,7 +16,10 @@
     import android.text.format.DateUtils;
     import android.util.Log;
     import android.view.View;
+    import android.view.ViewAnimationUtils;
     import android.view.ViewGroup;
+    import android.view.animation.AnimationUtils;
+    import android.view.animation.LayoutAnimationController;
     import android.widget.ImageView;
     import android.widget.TextView;
     import android.widget.Toast;
@@ -32,7 +32,6 @@
     import com.example.xyzreader.data.DownloadTask;
     import com.example.xyzreader.data.MyApplication;
     import com.example.xyzreader.data.OnLoadFinished;
-    import com.example.xyzreader.data.UpdaterService;
 
     import java.text.ParseException;
     import java.text.SimpleDateFormat;
@@ -53,10 +52,11 @@
         private static final String TAG = ArticleListActivity.class.toString();
         private Toolbar mToolbar;
         private SwipeRefreshLayout mSwipeRefreshLayout;
-        private RecyclerView mRecyclerView;
+        private GridRecyclerView mRecyclerView;
         private AppBarLayout appBarLayout;
         AppDatabase appDatabase;
-
+        Snackbar snackbar;
+        CoordinatorLayout coordinatorLayout;
 
         private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
         // Use default locale format
@@ -71,14 +71,23 @@
 
             mToolbar = (Toolbar) findViewById(R.id.toolbar);
 
+            coordinatorLayout=findViewById(R.id.coordinator);
+
 
             CollapsingToolbarLayout toolbarContainerView = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
-            toolbarContainerView.setTitle("Set Title");
+
+            snackbar=Snackbar.make(coordinatorLayout,"Loading Data ,Please wait.",Snackbar.LENGTH_INDEFINITE);
 
             mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+            mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    refresh();
+                }
+            });
             appBarLayout= (AppBarLayout) findViewById(R.id.toolbar_container);
 
-            mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+            mRecyclerView = (GridRecyclerView) findViewById(R.id.recycler_view);
         //    getLoaderManager().initLoader(0, null, this);
             appDatabase=((MyApplication)getApplicationContext()).getDatabase();
 
@@ -102,9 +111,21 @@
 
         private void refresh() {
             mRecyclerView.setAdapter(null);
-            mIsRefreshing=true;
-            updateRefreshingUI();
+            if(checkConnectivity()==1){
+                mIsRefreshing=true;
+                updateRefreshingUI();
+                snackbar.setText("Please Wait Loading Data.");
+            snackbar.setDuration(Snackbar.LENGTH_INDEFINITE);
+            snackbar.show();
             new DownloadTask(getApplicationContext(),ArticleListActivity.this).execute();
+            }
+            else{
+                mIsRefreshing=false;
+                updateRefreshingUI();
+                snackbar.setText("No Internet Connection!");
+                snackbar.setDuration(Snackbar.LENGTH_LONG);
+                snackbar.show();
+            }
 
             //startService(new Intent(this, UpdaterService.class));
         }
@@ -168,19 +189,43 @@
 
         @Override
         public void loadFinished(List<Data> data) {
-            mIsRefreshing=false;
-            updateRefreshingUI();
-            Adapter adapter = new Adapter(data);
-              adapter.setHasStableIds(true);
-            mRecyclerView.setAdapter(adapter);
+            if(data==null){
+                snackbar.setText("Bad Internet Connection!");
+                snackbar.setDuration(Snackbar.LENGTH_LONG);
+                snackbar.show();
+                mIsRefreshing = false;
+                updateRefreshingUI();
+                mRecyclerView.setAdapter(null);
+
+            }
+            else {
+                snackbar.dismiss();
+                mIsRefreshing = false;
+                updateRefreshingUI();
+                Adapter adapter = new Adapter(data);
+                adapter.setHasStableIds(true);
+                                mRecyclerView.setAdapter(adapter);
            /* int columnCount = getResources().getInteger(R.integer.list_column_count);
             StaggeredGridLayoutManager sglm =
                     new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
-          */  mRecyclerView.setLayoutManager(new GridLayoutManager(this,2));
-
+          */
+                mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+                LayoutAnimationController animationController=AnimationUtils.loadLayoutAnimation(ArticleListActivity.this,
+                        R.anim.grid_layout_animation_from_bottom);
+                mRecyclerView.setLayoutAnimation(animationController);
+            }
         }
 
-        private class Adapter extends RecyclerView.Adapter<ViewHolder> {
+        public int checkConnectivity(){
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            if (ni == null || !ni.isConnected()) {
+                return 0;
+            }
+            return 1;
+        }
+
+        private class Adapter extends GridRecyclerView.Adapter<ViewHolder> {
             private Cursor mCursor;
             private List<Data> data;
             int pos;
@@ -275,7 +320,7 @@
             }
         }
 
-        public static class ViewHolder extends RecyclerView.ViewHolder {
+        public static class ViewHolder extends GridRecyclerView.ViewHolder {
             public ImageView thumbnailView;
             public TextView titleView;
             public TextView subtitleView;
@@ -287,4 +332,6 @@
                 subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
             }
         }
+
+
     }
