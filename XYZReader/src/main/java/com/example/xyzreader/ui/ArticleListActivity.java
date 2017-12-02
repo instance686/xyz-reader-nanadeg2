@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -29,8 +28,11 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.xyzreader.R;
+import com.example.xyzreader.data.AppDatabase;
 import com.example.xyzreader.data.ArticleLoader;
+import com.example.xyzreader.data.DownloadTask;
 import com.example.xyzreader.data.ItemsContract;
+import com.example.xyzreader.data.MyApplication;
 import com.example.xyzreader.data.UpdaterService;
 
 import java.text.ParseException;
@@ -52,6 +54,8 @@ public class ArticleListActivity extends AppCompatActivity implements
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRecyclerView;
     private AppBarLayout appBarLayout;
+    AppDatabase appDatabase;
+
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
@@ -75,6 +79,8 @@ public class ArticleListActivity extends AppCompatActivity implements
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         getLoaderManager().initLoader(0, null, this);
+        appDatabase=((MyApplication)getApplicationContext()).getDatabase();
+
 
         if (savedInstanceState == null) {
             refresh();
@@ -100,6 +106,7 @@ public class ArticleListActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+        new DownloadTask(getApplicationContext()).execute();
         registerReceiver(mRefreshingReceiver,
                 new IntentFilter(UpdaterService.BROADCAST_ACTION_STATE_CHANGE));
     }
@@ -172,8 +179,8 @@ public class ArticleListActivity extends AppCompatActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    //startActivity(new Intent(Intent.ACTION_VIEW,
+                      //      ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
                 }
             });
             return vh;
