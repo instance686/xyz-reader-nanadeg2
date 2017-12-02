@@ -13,6 +13,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
@@ -23,8 +24,10 @@ import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
@@ -64,7 +67,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
 
 
-         CollapsingToolbarLayout toolbarContainerView = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
+        CollapsingToolbarLayout toolbarContainerView = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
         toolbarContainerView.setTitle("Set Title");
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
@@ -134,10 +137,10 @@ public class ArticleListActivity extends AppCompatActivity implements
         Adapter adapter = new Adapter(cursor);
         adapter.setHasStableIds(true);
         mRecyclerView.setAdapter(adapter);
-        int columnCount = getResources().getInteger(R.integer.list_column_count);
+       /* int columnCount = getResources().getInteger(R.integer.list_column_count);
         StaggeredGridLayoutManager sglm =
                 new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
-        mRecyclerView.setLayoutManager(sglm);
+      */  mRecyclerView.setLayoutManager(new GridLayoutManager(this,2));
     }
 
     @Override
@@ -152,7 +155,6 @@ public class ArticleListActivity extends AppCompatActivity implements
 
     private class Adapter extends RecyclerView.Adapter<ViewHolder> {
         private Cursor mCursor;
-
         public Adapter(Cursor cursor) {
             mCursor = cursor;
         }
@@ -205,13 +207,20 @@ public class ArticleListActivity extends AppCompatActivity implements
             } else {
                 holder.subtitleView.setText(Html.fromHtml(
                         outputFormat.format(publishedDate)
-                        + "<br/>" + " by "
-                        + mCursor.getString(ArticleLoader.Query.AUTHOR)));
+                                + "<br/>" + " by "
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)));
             }
-            holder.thumbnailView.setImageUrl(
+
+            Glide.with(ArticleListActivity.this)
+                    .load(mCursor.getString(ArticleLoader.Query.THUMB_URL))
+                    .centerCrop()
+                    .crossFade()
+                    .into(holder.thumbnailView);
+            /*.setImageUrl(
                     mCursor.getString(ArticleLoader.Query.THUMB_URL),
                     ImageLoaderHelper.getInstance(ArticleListActivity.this).getImageLoader());
-            holder.thumbnailView.setAspectRatio(mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO));
+            holder.thumbnailView.setAspectRatio(mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO));*/
+
         }
 
         @Override
@@ -221,13 +230,13 @@ public class ArticleListActivity extends AppCompatActivity implements
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public DynamicHeightNetworkImageView thumbnailView;
+        public ImageView thumbnailView;
         public TextView titleView;
         public TextView subtitleView;
 
         public ViewHolder(View view) {
             super(view);
-            thumbnailView = (DynamicHeightNetworkImageView) view.findViewById(R.id.thumbnail);
+            thumbnailView = (ImageView) view.findViewById(R.id.thumbnail);
             titleView = (TextView) view.findViewById(R.id.article_title);
             subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
         }
