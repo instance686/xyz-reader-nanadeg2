@@ -90,7 +90,7 @@
              toolbarContainerView = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
 
 
-            mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
+                mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
             mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
@@ -102,8 +102,11 @@
             mRecyclerView = (GridRecyclerView) findViewById(R.id.recycler_view);
             appDatabase=((MyApplication)getApplicationContext()).getDatabase();
             rosario=Typeface.createFromAsset(getAssets(),"Rosario-Regular.ttf");
+            toolbarContainerView.setTitle("XYZ-READER");
+            toolbarContainerView.setCollapsedTitleTypeface(rosario);
+            toolbarContainerView.setExpandedTitleTypeface(rosario);
 
-            if (savedInstanceState == null) {
+                if (savedInstanceState == null) {
                 mSwipeRefreshLayout.post(new Runnable() {   //start refreshing if screen orientation not changed
                     @Override
                     public void run() {
