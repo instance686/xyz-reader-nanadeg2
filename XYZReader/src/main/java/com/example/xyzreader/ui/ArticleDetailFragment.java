@@ -62,7 +62,7 @@ public class ArticleDetailFragment extends Fragment implements
     /*
         private int mTopInset;
         private View mPhotoContainerView;*/
-    private ImageView mPhotoView;
+    private ImageAspect mPhotoView;
     private LinearLayout meta_bar;
     //private int mScrollY;
     private boolean mIsCard = false;
@@ -149,7 +149,7 @@ public class ArticleDetailFragment extends Fragment implements
                 getActivityCast().homePressed();
             }
         });
-        mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
+        mPhotoView = (ImageAspect) mRootView.findViewById(R.id.photo);
         //mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
         mStatusBarColorDrawable = new ColorDrawable(0);

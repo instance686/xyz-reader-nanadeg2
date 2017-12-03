@@ -28,10 +28,10 @@
                 android:src="@drawable/ic_arrow_back"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="1.0"/>
-            <ImageView
+            <com.example.xyzreader.ui.ImageAspect
                 android:id="@+id/photo"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="0dp"
                 android:background="#ccc"
                 android:scaleType="centerCrop"
                 app:layout_collapseMode="parallax"
