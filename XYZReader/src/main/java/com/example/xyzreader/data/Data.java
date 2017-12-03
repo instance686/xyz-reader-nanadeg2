@@ -4,13 +4,15 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 /**
  * Created by ayush on 1/12/17.
  */
 @Entity(tableName = "data")
-public class Data {
+public class Data implements Parcelable{
     @PrimaryKey@NonNull
     public String id;
     public String title;
@@ -21,7 +23,30 @@ public class Data {
     public String aspect_ratio;
     public String published_date;
 
+    public Data(){}
 
+    protected Data(Parcel in) {
+        id = in.readString();
+        title = in.readString();
+        author = in.readString();
+        body = in.readString();
+        thumb = in.readString();
+        photo = in.readString();
+        aspect_ratio = in.readString();
+        published_date = in.readString();
+    }
+
+    public static final Creator<Data> CREATOR = new Creator<Data>() {
+        @Override
+        public Data createFromParcel(Parcel in) {
+            return new Data(in);
+        }
+
+        @Override
+        public Data[] newArray(int size) {
+            return new Data[size];
+        }
+    };
 
     public String getId() {
         return id;
@@ -87,4 +112,20 @@ public class Data {
         this.published_date = published_date;
     }
 
-   }
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(id);
+        parcel.writeString(title);
+        parcel.writeString(author);
+        parcel.writeString(body);
+        parcel.writeString(thumb);
+        parcel.writeString(photo);
+        parcel.writeString(aspect_ratio);
+        parcel.writeString(published_date);
+    }
+}

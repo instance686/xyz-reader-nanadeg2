@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface OnLoadFinished {
 public void loadFinished(List<Data> data);
+public void isRunning(boolean val,int choice);
 }

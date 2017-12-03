@@ -14,6 +14,7 @@
     import android.support.design.widget.CollapsingToolbarLayout;
     import android.support.design.widget.CoordinatorLayout;
     import android.support.design.widget.Snackbar;
+    import android.support.v4.view.ViewCompat;
     import android.support.v4.widget.SwipeRefreshLayout;
     import android.support.v7.app.AppCompatActivity;
     import android.support.v7.widget.GridLayoutManager;
@@ -36,7 +37,6 @@
     import com.example.xyzreader.data.AppDatabase;
     import com.example.xyzreader.data.ArticleLoader;
     import com.example.xyzreader.data.Data;
-    import com.example.xyzreader.data.Data1;
     import com.example.xyzreader.data.DownloadTask;
     import com.example.xyzreader.data.ItemsContract;
     import com.example.xyzreader.data.MyApplication;
@@ -68,13 +68,14 @@
         Snackbar snackbar,hsnackbar;
         CoordinatorLayout coordinatorLayout,coordinatorLayout1;
         Typeface rosario;
-        boolean horizontal,vertical;
-        private ArrayList<Data1> viewData=new ArrayList<>();
-
+        boolean checkAsync=false;
+        private ArrayList<Data> viewData=new ArrayList<>();
+        int choice;
         private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
         // Use default locale format
         private SimpleDateFormat outputFormat = new SimpleDateFormat();
         // Most time functions can only handle 1902 - 2037
+        CollapsingToolbarLayout toolbarContainerView;
         private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2,1,1);
             @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +87,7 @@
             coordinatorLayout=findViewById(R.id.coordinator);
 
 
-            CollapsingToolbarLayout toolbarContainerView = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
+             toolbarContainerView = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
 
 
             mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
@@ -99,63 +100,59 @@
             appBarLayout= (AppBarLayout) findViewById(R.id.toolbar_container);
 
             mRecyclerView = (GridRecyclerView) findViewById(R.id.recycler_view);
-        //    getLoaderManager().initLoader(0, null, this);
             appDatabase=((MyApplication)getApplicationContext()).getDatabase();
             rosario=Typeface.createFromAsset(getAssets(),"Rosario-Regular.ttf");
 
             if (savedInstanceState == null) {
-               refresh();
+                mSwipeRefreshLayout.post(new Runnable() {   //start refreshing if screen orientation not changed
+                    @Override
+                    public void run() {
+                        mSwipeRefreshLayout.setRefreshing(true);
+                        refresh();
+                    }
+                });
             }
             else{
-                mRecyclerView.setAdapter(null);
+                         choice=savedInstanceState.getInt("choice");
+                         checkAsync=savedInstanceState.getBoolean("checkAsync");
+                        if(checkAsync && choice==1) {
+                            mSwipeRefreshLayout.post(new Runnable() {   //start refreshing if screen orientation changed
+                                @Override
+                                public void run() {
+                                    mSwipeRefreshLayout.setRefreshing(true);
+                                    refresh();
+                                }
+                            });
+                        }
+                        else {
+                            new DownloadTask(getApplicationContext(), ArticleListActivity.this, 2).execute();
+                        }
             }
 
 
         }
 
-        @Override
-        protected void onRestoreInstanceState(Bundle savedInstanceState) {
-            super.onRestoreInstanceState(savedInstanceState);
-            ArrayList<Data1> dd=savedInstanceState.getParcelableArrayList("rdata");
-            List<Data> data=new ArrayList<>();
-            for(Data1 da:dd){
-                Data d=new Data();
-                d.setId(da.getId());
-                Log.v("rdata",da.getId());
-                d.setTitle(da.getTitle());
-                d.setAuthor(da.getAuthor());
-                d.setBody(da.getBody());
-                d.setThumb(da.getThumb());
-                d.setPhoto(da.getPhoto());
-                d.setAspect_ratio(da.aspect_ratio);
-                d.setPublished_date(da.published_date);
-                data.add(d);
-            }
-           // loadFinished(data);
 
-
-
-        }
 
         @Override
         public void onConfigurationChanged(Configuration newConfig) {
             super.onConfigurationChanged(newConfig);
             if(newConfig.orientation==Configuration.ORIENTATION_PORTRAIT){
 
+
             }
             else if(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
-            //refresh();
 
             }
         }
 
-        public void Snack(CoordinatorLayout cLayout){
-            try{
-                snackbar=Snackbar.make(cLayout,"",Snackbar.LENGTH_INDEFINITE);
-            }catch (Exception e){
+        public void Snack(View view,String text,int lenght) {
+            try {
+                snackbar = Snackbar.make(view, text, lenght);
+                snackbar.show();
+            } catch (Exception e) {
             }
         }
-
         @Override
         protected void onResume() {
             super.onResume();
@@ -169,175 +166,67 @@
         }
 
         private void refresh() {
-
-            if(checkConnectivity()==1){
-                mIsRefreshing=true;
-                updateRefreshingUI();
-            //    editSnack("Please Wait Loading Data",Snackbar.LENGTH_INDEFINITE);
-            new DownloadTask(getApplicationContext(),ArticleListActivity.this).execute();
+            if(checkConnectivity()) {
+                Snack(coordinatorLayout,"Refreshing",Snackbar.LENGTH_LONG);
+                new DownloadTask(getApplicationContext(), ArticleListActivity.this,1).execute();
+            }else {
+                Snack(coordinatorLayout,"Not Connected to Internet",Snackbar.LENGTH_LONG);
+                mSwipeRefreshLayout.setRefreshing(false);
             }
-            else {
-                mRecyclerView.setAdapter(null);
-                mIsRefreshing = false;
-                updateRefreshingUI();
-                //editSnack("No Internet Connection!",Snackbar.LENGTH_LONG);
-
-
-
-            }
-
-            //startService(new Intent(this, UpdaterService.class));
-        }
-
-        @Override
-        protected void onStart() {
-            super.onStart();
-
-     //      registerReceiver(mRefreshingReceiver,
-       //             new IntentFilter(UpdaterService.BROADCAST_ACTION_STATE_CHANGE));
-        }
-
-
-        @Override
-        protected void onStop() {
-            super.onStop();
-//            unregisterReceiver(mRefreshingReceiver);
-        }
-
-        private boolean mIsRefreshing = false;
-
-//        private BroadcastReceiver mRefreshingReceiver = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                if (UpdaterService.BROADCAST_ACTION_STATE_CHANGE.equals(intent.getAction())) {
-//                    mIsRefreshing = intent.getBooleanExtra(UpdaterService.EXTRA_REFRESHING, false);
-//                    updateRefreshingUI();
-//                }
-//            }
-//        };
-
-        private void updateRefreshingUI() {
-            mSwipeRefreshLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    mSwipeRefreshLayout.setRefreshing(mIsRefreshing);
-                }
-            });
-
-        }
-
-//        @Override
-//        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-//            return ArticleLoader.newAllArticlesInstance(this);
-//        }
-//
-//        @Override
-//        public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-//            Adapter adapter = new Adapter(cursor);
-//            adapter.setHasStableIds(true);
-//            mRecyclerView.setAdapter(adapter);
-//           /* int columnCount = getResources().getInteger(R.integer.list_column_count);
-//            StaggeredGridLayoutManager sglm =
-//                    new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
-//          */  mRecyclerView.setLayoutManager(new GridLayoutManager(this,2));
-//        }
-//
-//        @Override
-//        public void onLoaderReset(Loader<Cursor> loader) {
-//            mRecyclerView.setAdapter(null);
-//        }
-
-        public void editSnack(String text,int duration){
-            snackbar.setDuration(duration);
-            snackbar.setText(text);
-            snackbar.show();
-
-        }
-        @Override
-        public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-            super.onSaveInstanceState(outState, outPersistentState);
-            outState.putParcelableArrayList("rdata",viewData);
-
-
         }
 
         @Override
         public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-            mSwipeRefreshLayout.setEnabled(verticalOffset==0);
+            mSwipeRefreshLayout.setEnabled(true);
+       }
+
+        @Override
+        protected void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putBoolean("checkAsync",checkAsync);
+            outState.putInt("choice",choice);
         }
+
 
 
         @Override
-        public void loadFinished(List<Data> data) {
+        public void loadFinished(List<Data> da) {
+            mSwipeRefreshLayout.setRefreshing(false);
+            if (da == null) {
+                Snack(coordinatorLayout,"Data not found",Snackbar.LENGTH_LONG);
+                mRecyclerView.setAdapter(null);
+            }else {
+                viewData= (ArrayList<Data>) da;
+                mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+                LayoutAnimationController animationController = AnimationUtils.loadLayoutAnimation(ArticleListActivity.this, R.anim.grid_layout_animation_from_bottom);
+                mRecyclerView.setLayoutAnimation(animationController);
+                Adapter adapter=new Adapter(viewData,rosario);
+                adapter.setHasStableIds(true);
+                mRecyclerView.setAdapter(adapter);
 
-            if(data==null){
-            onNullData();
-            }
-            else {
-                onNotNullData(data);
             }
         }
-        public void onNullData(){
 
-
-            //snackbar.setActionTextColor(Color.RED);
-            //editSnack("Bad Internet Connection!",Snackbar.LENGTH_LONG);
-            viewData=null;
-            mIsRefreshing = false;
-            updateRefreshingUI();
-            mRecyclerView.setAdapter(null);
-
-        }
-        public void onNotNullData(List<Data> data){
-
-            viewData=new ArrayList<>();
-            viewData.clear();
-            // snackbar.dismiss();
-            for(Data d:data){
-                Data1 dd=new Data1();
-                dd.setId(d.getId());
-                dd.setTitle(d.getTitle());
-                dd.setAuthor(d.getAuthor());
-                dd.setBody(d.getBody());
-                dd.setThumb(d.getThumb());
-                dd.setPhoto(d.getPhoto());
-                dd.setAspect_ratio(d.getAspect_ratio());
-                dd.setPublished_date(d.published_date);
-                viewData.add(dd);
-            }
-
-            mIsRefreshing = false;
-            updateRefreshingUI();
-            Adapter adapter = new Adapter(data,rosario);
-            adapter.setHasStableIds(true);
-            mRecyclerView.setAdapter(adapter);
-           /* int columnCount = getResources().getInteger(R.integer.list_column_count);
-            StaggeredGridLayoutManager sglm =
-                    new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
-          */
-            mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-            LayoutAnimationController animationController=AnimationUtils.loadLayoutAnimation(ArticleListActivity.this,
-                    R.anim.grid_layout_animation_from_bottom);
-            mRecyclerView.setLayoutAnimation(animationController);
+        @Override
+        public void isRunning(boolean val,int ch) {
+            checkAsync=val;
+            choice=ch;
         }
 
-        public int checkConnectivity(){
+
+        public boolean checkConnectivity() {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
             NetworkInfo ni = cm.getActiveNetworkInfo();
             if (ni == null || !ni.isConnected()) {
-                return 0;
+                return false;
             }
-            return 1;
+            return true;
         }
 
         private class Adapter extends GridRecyclerView.Adapter<ViewHolder> {
-            private Cursor mCursor;
             private List<Data> data;
             int pos;
             Typeface rr;
-            public Adapter(Cursor cursor) {
-                mCursor = cursor;
-            }
 
             public Adapter(List<Data> data,Typeface rr) {
                 this.data=data;
@@ -347,9 +236,6 @@
 
             @Override
             public long getItemId(int position) {
-                //mCursor.moveToPosition(position);
-
-               // return mCursor.getLong(ArticleLoader.Query._ID);
                 pos=position;
                 return Long.parseLong(data.get(position).getId());
             }
@@ -370,9 +256,7 @@
 
             private Date parsePublishedDate() {
                 try {
-//                    String date = mCursor.getString(ArticleLoader.Query.PUBLISHED_DATE);
 //
-//                    return dateFormat.parse(date);
                      return dateFormat.parse(data.get(pos).getPublished_date());
 
                 } catch (ParseException ex) {
@@ -384,8 +268,7 @@
 
             @Override
             public void onBindViewHolder(ViewHolder holder, int position) {
-               // mCursor.moveToPosition(position);
-              //  holder.titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
+
                 holder.titleView.setText(data.get(position).getTitle());
                 holder.titleView.setTypeface(rr);
                 Date publishedDate = parsePublishedDate();
@@ -397,35 +280,26 @@
                                     System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
                                     DateUtils.FORMAT_ABBREV_ALL).toString()
                                     + "<br/>" + " by "
-                                    +// mCursor.getString(ArticleLoader.Query.AUTHOR)));
-                            data.get(position).getAuthor() ));
+                                    + data.get(position).getAuthor() ));
                 } else {
                     holder.subtitleView.setText(Html.fromHtml(
                             outputFormat.format(publishedDate)
                                     + "<br/>" + " by "
-                                    + //mCursor.getString(ArticleLoader.Query.AUTHOR)));
-                                    data.get(position).getAuthor() ));
+                                   + data.get(position).getAuthor() ));
 
                 }
                 holder.subtitleView.setTypeface(rr);
 
                 Glide.with(ArticleListActivity.this)
-                       // .load(mCursor.getString(ArticleLoader.Query.THUMB_URL))
                        .load(data.get(position).getThumb())
                         .centerCrop()
                         .crossFade()
                         .into(holder.thumbnailView);
-                /*.setImageUrl(
-                        mCursor.getString(ArticleLoader.Query.THUMB_URL),
-                        ImageLoaderHelper.getInstance(ArticleListActivity.this).getImageLoader());
-                holder.thumbnailView.setAspectRatio(mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO));*/
-
             }
 
             @Override
             public int getItemCount() {
                 return data.size();
-                //    return mCursor.getCount();
             }
         }
 
