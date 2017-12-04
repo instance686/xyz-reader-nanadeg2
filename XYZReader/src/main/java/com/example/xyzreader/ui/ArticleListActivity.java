@@ -216,6 +216,16 @@
             choice=ch;
         }
 
+        @Override
+        public void isRunning(boolean val) {
+
+        }
+
+        @Override
+        public void loadFinished(Cursor cursor) {
+
+        }
+
 
         public boolean checkConnectivity() {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
@@ -250,8 +260,8 @@
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                    //    startActivity(new Intent(Intent.ACTION_VIEW,
-                      //          ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                      startActivity(new Intent(Intent.ACTION_VIEW,
+                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
                     }
                 });
                 return vh;

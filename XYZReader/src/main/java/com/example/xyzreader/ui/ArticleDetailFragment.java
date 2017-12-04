@@ -2,6 +2,7 @@ package com.example.xyzreader.ui;
 
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
@@ -38,6 +39,8 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
+import com.example.xyzreader.data.DBCols;
+import com.example.xyzreader.data.SingleDataLoader;
 
 /**
  * A fragment representing a single Article detail screen. This fragment is
@@ -81,9 +84,10 @@ public class ArticleDetailFragment extends Fragment implements
     public ArticleDetailFragment() {
     }
 
-    public static ArticleDetailFragment newInstance(long itemId) {
+    public static ArticleDetailFragment newInstance(long itemId, Context c) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
+        Log.v("fragcall",itemId+"");
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -92,6 +96,8 @@ public class ArticleDetailFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.v("onCreate","fragmentCreated");
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             mItemId = getArguments().getLong(ARG_ITEM_ID);
@@ -115,12 +121,14 @@ public class ArticleDetailFragment extends Fragment implements
         // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
         // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
         // we do this in onActivityCreated.
-        getLoaderManager().initLoader(0, null, this);
+        Log.v("onActivityCreated","onActivityCreated");
+        getLoaderManager().initLoader(1, null, this).forceLoad();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.v("OncreateView","OnCreateView");
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
         /*mDrawInsetsFrameLayout = (DrawInsetsFrameLayout)
                 mRootView.findViewById(R.id.draw_insets_frame_layout);
@@ -229,7 +237,8 @@ public class ArticleDetailFragment extends Fragment implements
             mRootView.setAlpha(0);
             mRootView.setVisibility(View.VISIBLE);
             mRootView.animate().alpha(1);
-            titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
+            titleView.setText(mCursor.getString(DBCols.TITLE));
+            Log.v("title",mCursor.getString(DBCols.TITLE)+"");
             Date publishedDate = parsePublishedDate();
             if (!publishedDate.before(START_OF_EPOCH.getTime())) {
                 bylineView.setText(Html.fromHtml(
@@ -238,18 +247,19 @@ public class ArticleDetailFragment extends Fragment implements
                                 System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
                                 DateUtils.FORMAT_ABBREV_ALL).toString()
                                 + " by <font color='#ffffff'>"
-                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + mCursor.getString(DBCols.AUTHOR)
                                 + "</font>"));
 
             } else {
                 // If date is before 1902, just show the string
                 bylineView.setText(Html.fromHtml(
                         outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
-                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + mCursor.getString(DBCols.AUTHOR)
                                 + "</font>"));
 
             }
-            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n)", "<br />")));
+
+            bodyView.setText(Html.fromHtml(mCursor.getString(DBCols.BODY).replaceAll("(\r\n|\n)", "<br />")));
             /*ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
                     .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
                         @Override
@@ -270,8 +280,9 @@ public class ArticleDetailFragment extends Fragment implements
 
                         }
                     });*/
+            Log.v("photo",mCursor.getString(DBCols.PHOTO));
             Glide.with(getActivity())
-                    .load(mCursor.getString(ArticleLoader.Query.PHOTO_URL))
+                    .load(mCursor.getString(DBCols.PHOTO))
                     .asBitmap()
                     .into(new BitmapImageViewTarget(mPhotoView){
                         @Override
@@ -293,11 +304,14 @@ public class ArticleDetailFragment extends Fragment implements
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
+       // return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
+        Log.v("fragLoad","fragmentLoad");
+        return new SingleDataLoader(getActivityCast().getApplicationContext(),getActivityCast(),String.valueOf(mItemId));
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        Log.v("flf","fragmentLoadFinished");
         if (!isAdded()) {
             if (cursor != null) {
                 cursor.close();

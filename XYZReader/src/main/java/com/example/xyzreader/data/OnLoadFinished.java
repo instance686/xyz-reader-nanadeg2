@@ -1,5 +1,7 @@
 package com.example.xyzreader.data;
 
+import android.database.Cursor;
+
 import java.util.List;
 
 /**
@@ -9,4 +11,6 @@ import java.util.List;
 public interface OnLoadFinished {
 public void loadFinished(List<Data> data);
 public void isRunning(boolean val,int choice);
+public void isRunning(boolean val);
+public void loadFinished(Cursor cursor);
 }
