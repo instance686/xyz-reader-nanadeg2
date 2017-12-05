@@ -43,5 +43,12 @@
 
     <include layout="@layout/content_list"/>
 
+    <View
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:visibility="invisible"/>
+
 </android.support.design.widget.CoordinatorLayout>
 

@@ -4,7 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:colorBackground">
+    android:background="?android:colorBackground"
+    android:id="@+id/fragment_layout"
+    android:animateLayoutChanges="true"
+    >
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/toolbar_container"
@@ -19,7 +22,6 @@
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
             android:background="?colorPrimary"
-            app:contentScrim="?attr/colorPrimary"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
             <ImageView
                 android:id="@+id/home"
@@ -28,10 +30,10 @@
                 android:src="@drawable/ic_arrow_back"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="1.0"/>
-            <com.example.xyzreader.ui.ImageAspect
+            <ImageView
                 android:id="@+id/photo"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="200dp"
                 android:background="#ccc"
                 android:scaleType="centerCrop"
                 app:layout_collapseMode="parallax"
@@ -42,13 +44,28 @@
 
     <include layout="@layout/content_fragment"/>
 
+    <RelativeLayout
+        android:id="@+id/progressView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white">
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            />
+    </RelativeLayout>
+
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/share_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         app:fabSize="normal"
-        android:layout_margin="@dimen/fab_margin"/>
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_share"/>
 
 </android.support.design.widget.CoordinatorLayout>
 

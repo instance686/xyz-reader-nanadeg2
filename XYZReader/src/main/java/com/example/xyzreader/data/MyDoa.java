@@ -20,7 +20,7 @@ public interface MyDoa {
     public void deleteData();
     @Query("Select * FROM data")
     public List<Data> loadData();
-    @Query("Select * FROM data")
+    @Query("Select id FROM data")
     public Cursor loadDataintoCursor();
     @Query("Select * FROM data where id = :id")
     public Cursor loadSingleData(String id);

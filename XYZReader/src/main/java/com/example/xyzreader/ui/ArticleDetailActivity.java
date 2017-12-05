@@ -23,13 +23,14 @@ import com.example.xyzreader.data.DBCols;
 import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.data.ReadAllData;
 
+import java.util.ArrayList;
+
 /**
  * An activity representing a single Article detail screen, letting you swipe between articles.
  */
-public class ArticleDetailActivity extends AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ArticleDetailActivity extends AppCompatActivity {
 
-    private Cursor mCursor;
+    /*private Cursor mCursor;
     private long mStartId;
 
     private long mSelectedItemId;
@@ -37,9 +38,14 @@ public class ArticleDetailActivity extends AppCompatActivity
     private int mTopInset;
 
     private ViewPager mPager;
-    private MyPagerAdapter mPagerAdapter;
+    private MyPagerAdapter mPagerAdapter;*/
     /*private View mUpButtonContainer;
     private View mUpButton;*/
+    private ViewPager mPager;
+    private MyPagerAdapter mPagerAdapter;
+
+    private ArrayList<String> idList;
+    private int selectedPos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +57,27 @@ public class ArticleDetailActivity extends AppCompatActivity
         }
         setContentView(R.layout.activity_article_detail);
 
-        getLoaderManager().initLoader(1, null, this).forceLoad();
+        idList=getIntent().getStringArrayListExtra("IDLIST");
+        selectedPos=getIntent().getIntExtra("Selected Pos",0);
+
+        Log.d("pos",selectedPos+"");
 
         mPagerAdapter = new MyPagerAdapter(getFragmentManager());
         mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setOffscreenPageLimit(1);
+        mPager.setAdapter(mPagerAdapter);
+        mPager.setPageMargin((int) TypedValue
+                .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
+        mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
+
+        mPager.setCurrentItem(selectedPos);
+
+
+        /*getLoaderManager().initLoader(1, null, this).forceLoad();
+
+        mPagerAdapter = new MyPagerAdapter(getFragmentManager());
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setOffscreenPageLimit(1);
         mPager.setAdapter(mPagerAdapter);
         mPager.setPageMargin((int) TypedValue
                 .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
@@ -87,10 +110,10 @@ public class ArticleDetailActivity extends AppCompatActivity
                 Log.v("mSelectedItemId",""+mSelectedItemId);
 
             }
-        }
+        }*/
     }
 
-    @Override
+   /* @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
        // return ArticleLoader.newAllArticlesInstance(this);
         Log.v("onlf","onloadCreated");
@@ -124,13 +147,13 @@ public class ArticleDetailActivity extends AppCompatActivity
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
         mCursor = null;
         mPagerAdapter.notifyDataSetChanged();
-    }
+    }*/
 
-       private class MyPagerAdapter extends FragmentStatePagerAdapter {
+    private class MyPagerAdapter extends FragmentStatePagerAdapter {
         public MyPagerAdapter(FragmentManager fm) {
             super(fm);
         }
-
+/*
         @Override
         public void setPrimaryItem(ViewGroup container, int position, Object object) {
             super.setPrimaryItem(container, position, object);
@@ -139,19 +162,21 @@ public class ArticleDetailActivity extends AppCompatActivity
                 //mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
                 //updateUpButtonPosition();
             }
-        }
+        }*/
 
         @Override
         public Fragment getItem(int position) {
-            mCursor.moveToPosition(position);
-            Log.v("fragmentcalled",""+mCursor.getLong(DBCols.ID));
+            Bundle arguments = new Bundle();
+            arguments.putString("item_id", idList.get(position));
 
-            return ArticleDetailFragment.newInstance(mCursor.getLong(DBCols.ID),getApplicationContext());
+            ArticleDetailFragment articleDetailFragment= ArticleDetailFragment.newInstance(idList.get(position));
+            articleDetailFragment.setArguments(arguments);
+            return articleDetailFragment;
         }
 
         @Override
         public int getCount() {
-            return (mCursor != null) ? mCursor.getCount() : 0;
+            return idList.size();
         }
     }
 
