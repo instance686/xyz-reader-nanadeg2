@@ -64,6 +64,7 @@ public class ArticleDetailActivity extends AppCompatActivity {
 
         mPagerAdapter = new MyPagerAdapter(getFragmentManager());
         mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setPageTransformer(true,new ZoomOutPageTransformer());
         mPager.setOffscreenPageLimit(1);
         mPager.setAdapter(mPagerAdapter);
         mPager.setPageMargin((int) TypedValue
@@ -71,6 +72,7 @@ public class ArticleDetailActivity extends AppCompatActivity {
         mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
 
         mPager.setCurrentItem(selectedPos);
+
 
 
         /*getLoaderManager().initLoader(1, null, this).forceLoad();

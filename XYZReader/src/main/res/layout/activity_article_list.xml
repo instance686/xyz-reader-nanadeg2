@@ -23,13 +23,11 @@
             app:expandedTitleMarginStart="48dp"
             app:expandedTitleMarginEnd="64dp"
             app:collapsedTitleTextAppearance="@style/collapsedText"
-            android:background="?colorPrimary"
             app:contentScrim="?attr/colorPrimary"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
             <View
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:background="?colorPrimary"
                 app:layout_collapseMode="parallax"/>
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
