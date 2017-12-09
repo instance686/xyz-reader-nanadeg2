@@ -6,6 +6,7 @@ import android.arch.persistence.room.Dao;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
@@ -23,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
@@ -37,6 +39,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.AppDatabase;
 import com.example.xyzreader.data.ArticleLoader;
@@ -66,10 +70,10 @@ public class ArticleListActivity extends AppCompatActivity implements
     private static final String TAG = ArticleListActivity.class.toString();
     private Toolbar mToolbar;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private GridRecyclerView mRecyclerView;
+    private RecyclerView mRecyclerView;
     private AppBarLayout appBarLayout;
     AppDatabase appDatabase;
-    Snackbar snackbar, hsnackbar;
+    Snackbar snackbar;
     CoordinatorLayout coordinatorLayout, coordinatorLayout1;
     Typeface rosario;
     boolean checkAsync = false;
@@ -107,7 +111,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         });
         appBarLayout = (AppBarLayout) findViewById(R.id.toolbar_container);
 
-        mRecyclerView = (GridRecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         appDatabase = ((MyApplication) getApplicationContext()).getDatabase();
         rosario = Typeface.createFromAsset(getAssets(), "Rosario-Regular.ttf");
         toolbarContainerView.setTitle("XYZ-READER");
@@ -206,9 +210,9 @@ public class ArticleListActivity extends AppCompatActivity implements
             mRecyclerView.setAdapter(null);
         } else {
             viewData = (ArrayList<Data>) da;
-            mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-            LayoutAnimationController animationController = AnimationUtils.loadLayoutAnimation(ArticleListActivity.this, R.anim.grid_layout_animation_from_bottom);
-            mRecyclerView.setLayoutAnimation(animationController);
+            mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+           //ayoutAnimationController animationController = AnimationUtils.loadLayoutAnimation(ArticleListActivity.this, R.anim.grid_layout_animation_from_bottom);
+           //RecyclerView.setLayoutAnimation(animationController);
             Adapter adapter = new Adapter(viewData);
             adapter.setHasStableIds(true);
             mRecyclerView.setAdapter(adapter);
@@ -281,7 +285,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
 
             holder.titleView.setText(data.get(position).getTitle());
             holder.titleView.setTypeface(rr);
@@ -303,11 +307,15 @@ public class ArticleListActivity extends AppCompatActivity implements
 
             }
 
+
+
             Glide.with(ArticleListActivity.this)
                     .load(data.get(position).getThumb())
                     .centerCrop()
-                    .crossFade()
                     .into(holder.thumbnailView);
+            holder.thumbnailView.setAspectRatio(Float.parseFloat(data.get(position).getAspect_ratio()));
+
+
         }
 
         @Override
@@ -316,8 +324,8 @@ public class ArticleListActivity extends AppCompatActivity implements
         }
     }
 
-    public class ViewHolder extends GridRecyclerView.ViewHolder implements View.OnClickListener {
-        DynamicHeightNetworkImageView thumbnailView;
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+         DynamicHeightNetworkImageView thumbnailView;
         TextView titleView;
         TextView subtitleView;
         CardView cardView;
@@ -326,6 +334,7 @@ public class ArticleListActivity extends AppCompatActivity implements
         public ViewHolder(View view) {
             super(view);
             thumbnailView = (DynamicHeightNetworkImageView) view.findViewById(R.id.thumbnail);
+
             titleView = (TextView) view.findViewById(R.id.article_title);
             subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
             cardView=view.findViewById(R.id.list_item);
